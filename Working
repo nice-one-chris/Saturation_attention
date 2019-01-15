@@ -1,0 +1,155 @@
+import ddf.minim.*;
+import ddf.minim.ugens.*;
+import ddf.minim.analysis.*;
+ 
+ 
+ 
+ 
+Minim minim;
+AudioInput in;
+
+AudioOutput out;
+Oscil       wave;
+
+/////////////////////////////////////CHANGE THESE VARIBLES//////////////////////////////////////////////
+
+float osc = 10; //oscilatons per second
+float sec = 0.5;  //duration of each oscilation
+
+//osc = 10, sec = 0.5 is nice, sounds like a piano roll
+//osc = 3, sec = 9 is spooky
+//osc = 0.5, sec = 10 is intriguing
+//osc = 0.5, sec =4 simple and slow
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+ FFT fft;
+color c;//color
+float hertz;//frequency in hertz
+float osctotal = 0; // oscilations at any given moment
+int sampleRate= 44100;
+ 
+float [] max= new float [sampleRate/2];
+float maximum;
+float frequency;
+float freq = 0;
+float freq1 = 0;
+float freq2= 0;
+float freq3 = 0;
+float freq4 = 0;
+float freq5 = 0;
+float freq6 = 0;
+float freq7 = 0;
+float freq8 = 0;
+float freq9 = 0;
+float freq10 = 0;
+float freqfinal =0;
+
+float timer =0;
+
+Line  ampEnv;
+
+
+ 
+void setup()
+{
+  frameRate(osc);
+  size(800, 300);
+ 
+  minim = new Minim(this);
+  //minim.debugOn();
+  in = minim.getLineIn(Minim.STEREO, 4096, sampleRate);
+  out = minim.getLineOut();
+
+  fft = new FFT(in.mix.size(), sampleRate);
+ 
+  ampEnv = new Line();
+}
+ 
+ 
+ 
+void draw()
+{
+ 
+  background(0);
+  textSize(50); 
+  
+  findNote(); 
+  
+ freq10 = freq9;
+ freq9 = freq8;
+ freq8 = freq7;
+ freq7 = freq6;
+ freq6 = freq5;
+ freq5 = freq4;
+ freq4 = freq3;
+ freq3 = freq2;
+ freq2 = freq1;
+ freq1 = (frequency-6);
+ 
+ freqfinal = ((freq1 + freq2 + freq3 + freq4 + freq5 + freq6 + freq7 + freq8 + freq9 + freq10) / 10);
+
+  //println("frequency average = " + freqfinal);
+  text (frequency-6 +" hz realtime", 50, 150);
+  text (freqfinal+" hz average", 50, 80);
+  text ((osc*sec)+" overlapping oscilations", 50, 220 );
+  
+  wave = new Oscil(freqfinal, 0, Waves.TRIANGLE );
+  ampEnv = new Line();
+    ampEnv.patch( wave.amplitude );
+    
+     ampEnv.activate( sec, 0.1f, 0);
+        wave.patch( out );
+        
+     timer = timer+1;
+         // setup();
+         println(timer);
+         
+        if( timer > 150){
+          timer = 0;
+          setup();
+        }
+        
+            
+  }
+  
+void findNote() {
+ 
+  fft.forward(in.mix);
+  for (int f=0;f<sampleRate/2;f++) { //analyses the amplitude of each frequency analysed, between 0 and 22050 hertz
+    max[f]=fft.getFreq(float(f)); //each index is correspondent to a frequency and contains the amplitude value 
+  }
+  maximum=max(max);//get the maximum value of the max array in order to find the peak of volume
+ 
+  for (int i=0; i<max.length; i++) {// read each frequency in order to compare with the peak of volume
+    if (max[i] == maximum) {//if the value is equal to the amplitude of the peak, get the index of the array, which corresponds to the frequency
+      frequency= i;
+    }
+  }
+}
+
+
+void stop()
+{
+  
+  in.close();
+  minim.stop();
+ 
+  super.stop();
+}
+
+//void mouseClicked(){
+//setup();
+//}
+
+ //void timer (){
+ //        // setup();
+ //        if (timer> 150)
+ //        println(timer);
+         
+ //       if( timer > 150){
+ //         timer = 0;
+ //         setup();
+ //       }
+ //}
+        
